@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-create-member-table" author="system">
+                <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member"/>
+            </not>
+        </preConditions>
+
+        <comment>Create member table</comment>
+        
+        <createTable tableName="member">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="membername" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nickname" type="VARCHAR(30)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="student_no" type="BIGINT">
+                <constraints nullable="true" unique="true"/>
+            </column>
+            <column name="role" type="VARCHAR(255)"/>
+            <column name="match_count" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_login" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_time" type="DATETIME"/>
+            <column name="updated_time" type="DATETIME"/>
+        </createTable>
+        
+        <createIndex tableName="member" indexName="idx_member_email">
+            <column name="email"/>
+        </createIndex>
+        
+        <createIndex tableName="member" indexName="idx_member_student_no">
+            <column name="student_no"/>
+        </createIndex>
+        
+    </changeSet>
+
+</databaseChangeLog>

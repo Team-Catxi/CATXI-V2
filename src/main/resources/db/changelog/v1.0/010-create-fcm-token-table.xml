@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="010-add-fcm-token-to-member" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="member" columnName="fcm_token"/>
+            </not>
+        </preConditions>
+
+        <comment>Add FCM token fields to member table</comment>
+        
+        <addColumn tableName="member">
+            <column name="fcm_token" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="fcm_token_updated_at" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        
+        <createIndex tableName="member" indexName="idx_member_fcm_token">
+            <column name="fcm_token"/>
+        </createIndex>
+        
+    </changeSet>
+
+</databaseChangeLog>

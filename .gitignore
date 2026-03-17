@@ -1,0 +1,61 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+
+### application.properties ###
+src/main/resources/application-local.yml
+src/main/resources/application-dev.yml
+src/main/resources/application.yml
+
+### QueryDSL ###
+/src/main/generated/
+
+### logs ###
+/logs/
+
+### Firebase service account key ###
+/src/main/resources/firebase-service-account-key.json
+
+### Claude Code ###
+CLAUDE.md
+
+### Project docs (local only) ###
+ANALYSIS_REPORT.md
+PORTFOLIO_NOTES.md
+ROADMAP.md
+CLAUDE_USAGE_GUIDE.md
