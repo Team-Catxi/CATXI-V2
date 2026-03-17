@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -48,10 +50,18 @@ public class RedisConfig {
 		RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
 		configuration.setHostName(host);
 		configuration.setPort(port);
-		//redis pub/sub 에서는 특정 데이터베이스에 의존적이지 않음.
-		//configuration.setDatabase(0);
 		configuration.setPassword(RedisPassword.of(password));
-		return new LettuceConnectionFactory(configuration);
+
+		GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
+		poolConfig.setMaxTotal(20);
+		poolConfig.setMaxIdle(10);
+		poolConfig.setMinIdle(5);
+
+		LettucePoolingClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+			.poolConfig(poolConfig)
+			.build();
+
+		return new LettuceConnectionFactory(configuration, clientConfig);
 	}
 
 	@Bean("chatPubSubTemplate")
@@ -69,7 +79,7 @@ public class RedisConfig {
 	@Bean("commonTaskScheduler")
 	public ThreadPoolTaskScheduler redisPubSubScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		scheduler.setPoolSize(4);
+		scheduler.setPoolSize(8);
 		scheduler.setThreadNamePrefix("redis-pubsub-");
 		scheduler.initialize();
 		return scheduler;
