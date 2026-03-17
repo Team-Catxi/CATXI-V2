@@ -24,7 +24,6 @@ public class ReportService {
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
-    private final DiscordWebhookService discordWebhookService;
 
     @Transactional
     public ReportCreateRes createReport(Long roomId, String targetUserEmail, String reporterEmail, ReportCreateReq req) {
@@ -47,7 +46,6 @@ public class ReportService {
             .build();
 
         Report savedReport = reportRepository.save(report);
-        discordWebhookService.sendReportNotification(savedReport);
 
         return ReportCreateRes.from(savedReport);
     }
