@@ -86,33 +86,15 @@ fcm:
 server:
   port: 8080
 
-discord:
-  webhook:
-    url: ${DISCORD_WEBHOOK_URL:}
-
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info
       base-path: /actuator
   endpoint:
     health:
       show-details: always
-    prometheus:
-      enabled: true
-    metrics:
-      enabled: true
-  metrics:
-    distribution:
-      percentiles-histogram:
-        http.server.requests: true
-      percentiles:
-        http.server.requests: 0.5, 0.95, 0.99
-  prometheus:
-    metrics:
-      export:
-        enabled: true
 
 logging:
   level:
