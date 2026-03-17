@@ -2,8 +2,9 @@ package com.project.catxi.fcm.service;
 
 import com.google.firebase.messaging.*;
 import com.project.catxi.member.domain.Member;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,12 +12,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FcmNotificationService {
 
     private final FirebaseMessaging firebaseMessaging;
     private final FcmTokenService fcmTokenService;
     private final FcmBatchOptimizer batchOptimizer;
+
+    @Autowired
+    public FcmNotificationService(@Nullable FirebaseMessaging firebaseMessaging,
+                                  FcmTokenService fcmTokenService,
+                                  FcmBatchOptimizer batchOptimizer) {
+        this.firebaseMessaging = firebaseMessaging;
+        this.fcmTokenService = fcmTokenService;
+        this.batchOptimizer = batchOptimizer;
+    }
 
     private boolean isFirebaseInitialized() {
         return firebaseMessaging != null;
