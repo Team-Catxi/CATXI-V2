@@ -97,6 +97,9 @@ public class ChatRoomService {
 			.build();
 		chatParticipantRepository.save(hostPart);
 
+		log.info("[채팅방 생성] roomId={}, host={}, start={}, end={}, maxCapacity={}",
+			room.getRoomId(), email, room.getStartPoint(), room.getEndPoint(), room.getMaxCapacity());
+
 		return new RoomCreateRes(
 			room.getRoomId(),
 			room.getStartPoint(),
@@ -134,6 +137,8 @@ public class ChatRoomService {
 			var emails = chatParticipantRepository.findParticipantEmailsByChatRoom(chatRoom);
 			var hostNickname = member.getNickname();
 
+			log.info("[채팅방 삭제] roomId={}, host={}", roomId, email);
+
 			// 트랜잭션 커밋 후 Redis로 브로드캐스트되도록 이벤트 발행
 			applicationEventPublisher.publishEvent(new RoomDeletedEvent(id, emails, hostNickname));
 
@@ -148,6 +153,7 @@ public class ChatRoomService {
 
 		String systemMessage = member.getNickname() + " 님이 퇴장하셨습니다.";
 		chatMessageService.sendSystemMessage(roomId, systemMessage);
+		log.info("[채팅방 퇴장] roomId={}, email={}", roomId, email);
 	}
 
 	public void joinChatRoom(Long roomId, String email) {
@@ -158,6 +164,7 @@ public class ChatRoomService {
 			.orElseThrow(() -> new CatxiException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 		if (kickedParticipantRepository.existsByChatRoomAndMember(chatRoom, member)) {
+			log.warn("[채팅방 입장 거부] 강퇴 이력 존재 - roomId={}, email={}", roomId, email);
 			throw new CatxiException(ChatParticipantErrorCode.BLOCKED_FROM_ROOM);
 		}
 
@@ -180,6 +187,7 @@ public class ChatRoomService {
 		sendParticipantUpdateMessage(chatRoom);
 
 		chatMessageService.sendSystemMessage(roomId, member.getNickname() + " 님이 입장하셨습니다.");
+		log.info("[채팅방 입장] roomId={}, email={}", roomId, email);
 	}
 
 	public Long getMyChatRoomId(String email) {
