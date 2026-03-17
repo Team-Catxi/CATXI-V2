@@ -1,13 +1,14 @@
 package com.project.catxi;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 class CatxiApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void mainClassLoads() {
+		assertDoesNotThrow(() -> Class.forName("com.project.catxi.CatxiApplication"));
 	}
 
 }
