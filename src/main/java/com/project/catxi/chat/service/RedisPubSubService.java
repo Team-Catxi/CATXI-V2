@@ -39,14 +39,13 @@ public class RedisPubSubService implements MessageListener {
 	public void onMessage(Message message, byte[] pattern) {
 		String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
 		String payload = new String(message.getBody(),StandardCharsets.UTF_8);
-		log.info("[Redis 메시지 수신] channel: {}, payload: {}", channel, payload);
 
 		try {
 			if ("chat".equals(channel)) {
 				// 채팅 메시지 처리 (WebSocket 브로드캐스트만)
 				ChatMessageSendReq chatMessageDto = objectMapper.readValue(payload, ChatMessageSendReq.class);
 				messageTemplate.convertAndSend("/topic/" + chatMessageDto.roomId(), chatMessageDto);
-				
+
 			} else if (channel.equals("map")) {
 				CoordinateRes coordinateRes = objectMapper.readValue(payload, CoordinateRes.class);
 				messageTemplate.convertAndSend("/topic/map/" + coordinateRes.roomId(), coordinateRes);
@@ -58,10 +57,8 @@ public class RedisPubSubService implements MessageListener {
 				messageTemplate.convertAndSend("/topic/room/" + update.roomId() + "/participants", update);
 			} else if (channel.startsWith("kick:")) {
 				String email = channel.split(":",2)[1];
-				log.info("[강퇴 메시지 수신] channel: {}, 대상 이메일: {}", channel, email);
-				log.info("[강퇴 메시지 전송 시도] 대상: {}, destination: /queue/kick, payload: KICKED", email);
+				log.info("[강퇴 알림 전송] email={}", email);
 				messageTemplate.convertAndSendToUser(email, "/queue/kick", "KICKED");
-				log.info("[강퇴 메시지 전송 완료] 대상: {}", email);
 			} else if (channel.startsWith("roomdeleted:")) {
 				RoomEventMessage evt = objectMapper.readValue(payload, RoomEventMessage.class);
 				messageTemplate.convertAndSend("/topic/room/" + evt.roomId() + "/deleted", evt);
@@ -70,6 +67,7 @@ public class RedisPubSubService implements MessageListener {
 				messageTemplate.convertAndSend("/topic/ready/" + evt.roomId() + "/result", evt);
 			}
 		} catch (JsonProcessingException e) {
+			log.error("[Redis 메시지 처리 실패] channel={}, payload 파싱 오류", channel, e);
 			throw new RuntimeException(e);
 		}
 	}

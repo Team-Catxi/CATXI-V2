@@ -40,8 +40,7 @@ public class StompEventListener {
 			log.info("[WebSocket 연결] SessionId: {}, Email: {}", sessionId, email);
 		}
 		
-		System.out.println("connect session Id" + sessionId);
-		System.out.println("total session : "+sessions.size());
+		log.debug("[WebSocket 연결] 총 세션 수: {}", sessions.size());
 	}
 
 	@EventListener
@@ -63,8 +62,7 @@ public class StompEventListener {
 		sessionUserMap.remove(sessionId);
 		sessionRoomMap.remove(sessionId);
 		
-		System.out.println("disconnect session Id" + sessionId);
-		System.out.println("total session : "+sessions.size());
+		log.debug("[WebSocket 해제] 총 세션 수: {}", sessions.size());
 	}
 	
 	@EventListener

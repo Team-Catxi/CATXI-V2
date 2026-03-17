@@ -90,6 +90,7 @@ public class MatchHistoryService {
 
     // 채팅방 상태가 MATCHED가 아니거나 참여자가 1명 이하인 경우 매칭 기록을 저장하지 않음
     if(!room.getStatus().equals(RoomStatus.MATCHED) || participants.size()==1){
+      log.warn("[매치 이력 저장 스킵] roomId={}, status={}, participantCount={}", roomId, room.getStatus(), participants.size());
       return;
     }
 
@@ -104,6 +105,7 @@ public class MatchHistoryService {
       memberRepository.save(part);
     }
 
+    log.info("[매치 이력 저장 완료] roomId={}, participantCount={}", roomId, participants.size());
   }
 
   private void saveMatchHistory(ChatRoom chatRoom, Member member,List<String> fellasList) {

@@ -97,6 +97,7 @@ public class TimerService {
 
 			if (savedCount == currentCount) {
 				room.matchedStatus(RoomStatus.MATCHED);
+				log.info("[매칭 성공] roomId={}, participantCount={}", roomId, savedCount);
 				publishRoomResult(roomIdLong, "MATCHED", "모든 참가자가 준비되었습니다. 매칭이 완료되었습니다");
 			} else {
 				// 준비하지 않은 참가자 퇴장 메시지 전송
@@ -105,6 +106,8 @@ public class TimerService {
 				// DB에서 준비하지 않은 참가자 삭제
 				chatParticipantRepository.deleteAllByChatRoomAndIsReadyFalse(room);
 				chatParticipantRepository.updateIsReadyFalseExceptHost(room.getRoomId());
+
+				log.info("[매칭 실패 - 대기 복귀] roomId={}, 미준비 인원={}", roomId, removeNickNames.size());
 
 				for (String nickName : removeNickNames) {
 					String systemMessage = nickName + " 님이 퇴장하셨습니다.";

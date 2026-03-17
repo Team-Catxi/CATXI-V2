@@ -32,7 +32,9 @@ import com.project.catxi.map.dto.CoordinateRes;
 import com.project.catxi.map.service.MapService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Controller
 public class StompController {
@@ -72,6 +74,7 @@ public class StompController {
 			.orElseThrow(() -> new CatxiException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 		if (!chatParticipantRepository.existsByChatRoomAndMember(room, member)) {
+			log.warn("[좌표 전송 거부] 비참여자 요청 - roomId={}, email={}", roomId, coordinateReq.email());
 			throw new CatxiException(ChatParticipantErrorCode.PARTICIPANT_NOT_FOUND);
 		}
 		Double distance = mapService.handleSaveCoordinateAndDistance(coordinateReq);
