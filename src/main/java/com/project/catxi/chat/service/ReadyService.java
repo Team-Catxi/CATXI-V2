@@ -61,6 +61,8 @@ public class ReadyService {
 
 		room.setStatus(RoomStatus.READY_LOCKED);
 
+		log.info("[준비 요청] roomId={}, host={}", roomId, email);
+
 		/*
 		 * 레디 요청 10초 이후 (레디 요청 당시의 참여자 수 == 10초 이후 참여자 수)가
 		 * - True라면 MATCHED로 변경
