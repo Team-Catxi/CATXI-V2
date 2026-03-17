@@ -36,8 +36,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build and Test
-        run: ./gradlew build --no-daemon
+      - name: Compile
+        run: ./gradlew assemble --no-daemon
+
+      - name: Run Tests
+        run: ./gradlew test --no-daemon
+        continue-on-error: false
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
