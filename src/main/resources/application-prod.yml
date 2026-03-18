@@ -2,6 +2,8 @@ spring:
   config:
     activate:
       on-profile: prod
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   datasource:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/catxi?allowPublicKeyRetrieval=true&useSSL=true&serverTimezone=Asia/Seoul&useLegacyDatetimeCode=false&connectionTimeZone=Asia/Seoul&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8
     username: ${DB_USER}
@@ -85,6 +87,7 @@ fcm:
 
 server:
   port: 8080
+  shutdown: graceful
   tomcat:
     threads:
       max: 100
