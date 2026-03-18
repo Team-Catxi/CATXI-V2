@@ -18,7 +18,8 @@ public class CorsConfig {
 
         configuration.setAllowedOrigins(Arrays.asList(
             "https://catxi-university-taxi-b0936.web.app",
-            "https://catxi.kro.kr",
+            "https://catxi.shop",
+            "https://www.catxi.shop",
             "http://localhost:3000",
             "http://localhost:5173"
         ));
