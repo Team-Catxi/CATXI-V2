@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 
@@ -22,6 +23,7 @@ import java.util.Map;
  * KRaft 모드에서도 브로커 운영 부담이 크므로 200 DAU 규모에서 채택하지 않음.
  * Phase 5(ECS 전환) 이후 메시지 내구성 요구사항이 생기면 재검토.
  */
+@EnableKafka
 @Configuration
 @Profile("kafka")
 public class KafkaConfig {
