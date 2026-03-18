@@ -67,6 +67,9 @@ dependencies {
 
     // Prometheus metrics
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Kafka — Phase 3 브로커 비교용 (@Profile("kafka")로 격리, 프로덕션에 영향 없음)
+    implementation 'org.springframework.kafka:spring-kafka'
 }
 
 
