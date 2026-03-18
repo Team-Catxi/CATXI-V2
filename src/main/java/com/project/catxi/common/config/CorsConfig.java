@@ -32,7 +32,10 @@ public class CorsConfig {
 
         configuration.setExposedHeaders(Arrays.asList(
             "Authorization",
-            "Content-Type"
+            "Content-Type",
+            "access",
+            "isNewUser",
+            "X-Access-Token-Refreshed"
         ));
 
         // 쿠키(refresh token) 및 Authorization 헤더 허용
