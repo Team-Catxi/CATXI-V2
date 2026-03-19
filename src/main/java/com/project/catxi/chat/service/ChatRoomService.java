@@ -267,14 +267,7 @@ public class ChatRoomService {
 			.orElseThrow(() -> new EntityNotFoundException("room not found"));
 		Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new EntityNotFoundException("member not found"));
-		List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
-		for (ChatParticipant c : chatParticipants) {
-			if (c.getMember().equals(member)) {
-				return true;
-			}
-		}
-		return false;
-
+		return chatParticipantRepository.existsByChatRoomAndMember(chatRoom, member);
 	}
 
 	public void checkRoomEnter(Long roomId, String email) {
