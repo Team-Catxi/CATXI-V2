@@ -1,7 +1,5 @@
 package com.project.catxi.chat.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.catxi.chat.dto.ChatMessagePageRes;
 import com.project.catxi.chat.dto.ChatMessageRes;
 import com.project.catxi.chat.dto.ChatRoomInfoRes;
 import com.project.catxi.chat.dto.ChatRoomPageRes;
@@ -55,14 +54,19 @@ public class ChatController {
 		return ResponseEntity.ok(ApiResponse.success(res));
 	}
 
-	@Operation(summary = "채팅방 메시지 조회", description = "채팅방에 참여 중인 사용자가 해당 방의 메시지 이력을 조회합니다.")
+	@Operation(summary = "채팅방 메시지 조회",
+		description = "커서 기반 페이지네이션으로 채팅 메시지 이력을 조회합니다. "
+			+ "cursor 미전달 시 최신 메시지부터 size개 반환. "
+			+ "다음 페이지 요청 시 응답의 nextCursor를 cursor로 전달합니다.")
 	@GetMapping("/{roomId}/messages")
-	public ResponseEntity<ApiResponse<List<ChatMessageRes>>> getHistory(
+	public ResponseEntity<ApiResponse<ChatMessagePageRes>> getHistory(
 		@PathVariable Long roomId,
+		@RequestParam(required = false) Long cursor,
+		@RequestParam(defaultValue = "50") int size,
 		@AuthenticationPrincipal CustomUserDetails userDetails) {
 
 		String email = userDetails.getUsername();
-		List<ChatMessageRes> history = chatMessageService.getChatHistory(roomId, email);
+		ChatMessagePageRes history = chatMessageService.getChatHistory(roomId, email, cursor, size);
 
 		return ResponseEntity.ok(ApiResponse.success(history));
 	}
