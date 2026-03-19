@@ -85,60 +85,46 @@ public class ChatMessageService {
 			log.info("FCM Outbox 저장 시작: RoomId={}, MessageId={}",
 					room.getRoomId(), savedMessage.getId());
 
+			String senderName = sender.getNickname() != null ? sender.getNickname() : sender.getMembername();
+
 			// 방에 참여한 다른 사용자들 조회 (발송자 제외)
 			List<ChatParticipant> participants = chatParticipantRepository.findByChatRoom(room);
 
-			// 각 참여자별로 Outbox에 저장
-			participants.stream()
+			// 모든 참여자의 Outbox 이벤트를 한 번에 생성
+			List<FcmOutbox> outboxList = participants.stream()
 					.filter(participant -> participant.getMember() != null)
 					.filter(participant -> !participant.getMember().getId().equals(sender.getId()))
-					.forEach(participant -> {
-						saveChatNotificationToOutbox(
-								participant.getMember().getId(),
-								room.getRoomId(),
-								savedMessage.getId(),
-								sender.getNickname() != null ? sender.getNickname() : sender.getMembername(),
-								message);
-					});
+					.map(participant -> {
+						try {
+							FcmNotificationEvent event = FcmNotificationEvent.createChatMessage(
+									participant.getMember().getId(),
+									room.getRoomId(),
+									savedMessage.getId(),
+									senderName,
+									message);
+							String payload = objectMapper.writeValueAsString(event);
+							return FcmOutbox.builder()
+									.eventId(event.eventId())
+									.eventType(FcmOutbox.EventType.CHAT_MESSAGE)
+									.payload(payload)
+									.build();
+						} catch (JsonProcessingException e) {
+							log.error("FCM 이벤트 직렬화 실패: Target={}", participant.getMember().getId(), e);
+							throw new CatxiException(FcmErrorCode.FCM_OUTBOX_SAVE_FAILED);
+						}
+					})
+					.toList();
 
-			log.info("FCM Outbox 저장 완료: RoomId={}, MessageId={}",
-					room.getRoomId(), savedMessage.getId());
+			// 단건 save() N회 → saveAll() 1회로 DB 왕복 최소화
+			fcmOutboxRepository.saveAll(outboxList);
+
+			log.info("FCM Outbox 저장 완료: RoomId={}, MessageId={}, count={}",
+					room.getRoomId(), savedMessage.getId(), outboxList.size());
 
 		} catch (Exception e) {
 			log.error("FCM Outbox 저장 실패: RoomId={}, Error={}",
 					room.getRoomId(), e.getMessage(), e);
-			// 예외를 다시 던져서 전체 트랜잭션 롤백
 			throw e;
-		}
-	}
-
-	/**
-	 * 채팅 알림을 Outbox에 저장
-	 */
-	private void saveChatNotificationToOutbox(Long targetMemberId, Long roomId, Long messageId,
-			String senderNickname, String message) {
-		try {
-			// FcmNotificationEvent 생성
-			FcmNotificationEvent event = FcmNotificationEvent.createChatMessage(
-					targetMemberId, roomId, messageId, senderNickname, message);
-
-			// JSON으로 직렬화
-			String payload = objectMapper.writeValueAsString(event);
-
-			// Outbox에 저장
-			FcmOutbox outbox = FcmOutbox.builder()
-					.eventId(event.eventId())
-					.eventType(FcmOutbox.EventType.CHAT_MESSAGE)
-					.payload(payload)
-					.build();
-
-			fcmOutboxRepository.save(outbox);
-
-			log.debug("FCM Outbox 저장: EventId={}, Target={}", event.eventId(), targetMemberId);
-
-		} catch (JsonProcessingException e) {
-			log.error("FCM 이벤트 직렬화 실패: Target={}", targetMemberId, e);
-			throw new CatxiException(FcmErrorCode.FCM_OUTBOX_SAVE_FAILED);
 		}
 	}
 
