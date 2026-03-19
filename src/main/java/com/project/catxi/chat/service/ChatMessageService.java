@@ -1,10 +1,12 @@
 package com.project.catxi.chat.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.catxi.chat.domain.ChatMessage;
 import com.project.catxi.chat.domain.ChatParticipant;
 import com.project.catxi.chat.domain.ChatRoom;
+import com.project.catxi.chat.dto.ChatMessagePageRes;
 import com.project.catxi.chat.dto.ChatMessageRes;
 import com.project.catxi.chat.dto.ChatMessageSendReq;
 import com.project.catxi.chat.repository.ChatMessageRepository;
@@ -139,7 +142,7 @@ public class ChatMessageService {
 		}
 	}
 
-	public List<ChatMessageRes> getChatHistory(Long roomId, String email) {
+	public ChatMessagePageRes getChatHistory(Long roomId, String email, Long cursor, int size) {
 
 		Member member = memberRepository.findByEmail(email)
 				.orElseThrow(() -> new CatxiException(MemberErrorCode.MEMBER_NOT_FOUND));
@@ -151,8 +154,21 @@ public class ChatMessageService {
 			throw new CatxiException(ChatParticipantErrorCode.PARTICIPANT_NOT_FOUND);
 		}
 
-		return chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(room)
-				.stream()
+		// size+1 개 조회해서 다음 페이지 존재 여부 판단
+		PageRequest pageRequest = PageRequest.of(0, size + 1);
+		List<ChatMessage> fetched = (cursor == null)
+				? chatMessageRepository.findByChatRoomOrderByIdDesc(room, pageRequest)
+				: chatMessageRepository.findByChatRoomAndIdLessThanOrderByIdDesc(room, cursor, pageRequest);
+
+		boolean hasNext = fetched.size() > size;
+		List<ChatMessage> page = hasNext ? fetched.subList(0, size) : fetched;
+
+		// DESC로 조회한 결과를 ASC(오래된 순)로 뒤집어 반환
+		Collections.reverse(page);
+
+		Long nextCursor = hasNext ? page.get(0).getId() : null;
+
+		List<ChatMessageRes> messages = page.stream()
 				.map(m -> new ChatMessageRes(
 						m.getMember() != null ? m.getMember().getEmail() : "[SYSTEM]",
 						m.getId(),
@@ -163,6 +179,7 @@ public class ChatMessageService {
 						m.getCreatedTime()))
 				.toList();
 
+		return new ChatMessagePageRes(messages, nextCursor, hasNext);
 	}
 
 	public void sendSystemMessage(Long roomId, String content) {
