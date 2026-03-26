@@ -7,6 +7,9 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+  CONTAINER_NAME: catxi-app
 
 jobs:
   build-and-deploy:
@@ -61,50 +64,27 @@ jobs:
             .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Deploy to EC2 via SSM
-        env:
-          IMAGE_TAG: ${{ steps.build-image.outputs.image_tag }}
+      - name: Download current task definition
         run: |
-          COMMAND_ID=$(aws ssm send-command \
-            --region "$AWS_REGION" \
-            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --parameters "commands=['/opt/catxi/deploy.sh $IMAGE_TAG']" \
-            --comment "Deploy $IMAGE_TAG from GitHub Actions" \
-            --query "Command.CommandId" \
-            --output text)
+          aws ecs describe-task-definition \
+            --task-definition ${{ secrets.ECS_TASK_FAMILY }} \
+            --query taskDefinition \
+            --output json > task-definition.json
 
-          echo "SSM Command ID: $COMMAND_ID"
+      - name: Update image in task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
 
-          # Wait for command to complete (max 5 minutes)
-          for i in $(seq 1 30); do
-            STATUS=$(aws ssm get-command-invocation \
-              --region "$AWS_REGION" \
-              --command-id "$COMMAND_ID" \
-              --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-              --query "Status" \
-              --output text 2>/dev/null || echo "Pending")
-
-            echo "[$i/30] Status: $STATUS"
-
-            if [ "$STATUS" = "Success" ]; then
-              echo "Deploy succeeded."
-              exit 0
-            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ] || [ "$STATUS" = "TimedOut" ]; then
-              aws ssm get-command-invocation \
-                --region "$AWS_REGION" \
-                --command-id "$COMMAND_ID" \
-                --instance-id "${{ secrets.EC2_INSTANCE_ID }}" \
-                --query "StandardErrorContent" \
-                --output text
-              echo "Deploy failed with status: $STATUS"
-              exit 1
-            fi
-
-            sleep 10
-          done
-
-          echo "Deploy timed out after 5 minutes"
-          exit 1
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
